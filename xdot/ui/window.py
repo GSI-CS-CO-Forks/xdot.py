@@ -549,8 +549,9 @@ class DotWindow(Gtk.Window):
 
         # Add Find text search
         find_toolitem = uimanager.get_widget('/ToolBar/Find')
-        self.textentry = Gtk.Entry(max_length=20)
+        self.textentry = Gtk.Entry(max_length=120)
         self.textentry.set_icon_from_stock(0, Gtk.STOCK_FIND)
+        self.textentry.set_width_chars(80)
         find_toolitem.add(self.textentry)
 
         self.textentry.set_activates_default(True)
@@ -589,6 +590,8 @@ class DotWindow(Gtk.Window):
         dot_widget.set_highlight(found_items, search=True)
         if(len(found_items) == 1):
             dot_widget.animate_to(found_items[0].x, found_items[0].y)
+        #fix to release focus. Otherwise, hotkeys don't work anymore after textsearch
+        self.set_focus(self.dotwidget)
 
     def set_filter(self, filter):
         self.dotwidget.set_filter(filter)
