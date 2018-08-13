@@ -54,6 +54,7 @@ class DotWidget(Gtk.DrawingArea):
     }
 
     filter = 'dot'
+    filter_args = []
 
     def __init__(self):
         Gtk.DrawingArea.__init__(self)
@@ -96,12 +97,19 @@ class DotWidget(Gtk.DrawingArea):
     def set_filter(self, filter):
         self.filter = filter
 
+    def set_filter_args(self, filter_args):
+        if filter_args != '':
+            self.filter_args = filter_args.split(' ')
+        else:
+            self.filter_args = []
+
     def run_filter(self, dotcode):
         if not self.filter:
             return dotcode
         try:
+            args = [self.filter, '-Txdot'] + self.filter_args
             p = subprocess.Popen(
-                [self.filter, '-Txdot'],
+                args,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -595,6 +603,9 @@ class DotWindow(Gtk.Window):
 
     def set_filter(self, filter):
         self.dotwidget.set_filter(filter)
+
+    def set_filter_args(self, filter_args):
+        self.dotwidget.set_filter_args(filter_args)
 
     def set_dotcode(self, dotcode, filename=None):
         if self.dotwidget.set_dotcode(dotcode, filename):

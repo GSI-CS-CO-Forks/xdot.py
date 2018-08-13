@@ -49,6 +49,10 @@ Shortcuts:
         dest='filter', default='dot', metavar='FILTER',
         help='graphviz filter: dot, neato, twopi, circo, or fdp [default: %(default)s]')
     parser.add_argument(
+        '--filterargs',
+        dest='filter_args', default='', metavar='FILTER_ARGS',
+        help='graphviz filter arguments')
+    parser.add_argument(
         '-n', '--no-filter',
         action='store_const', const=None, dest='filter',
         help='assume input is already filtered into xdot format (use e.g. dot -Txdot)')
@@ -70,6 +74,7 @@ Shortcuts:
     win = DotWindow(width=width, height=height)
     win.connect('delete-event', Gtk.main_quit)
     win.set_filter(options.filter)
+    win.set_filter_args(options.filter_args)
     if inputfile and len(inputfile) >= 1:
         if inputfile == '-':
             win.set_dotcode(sys.stdin.read())
