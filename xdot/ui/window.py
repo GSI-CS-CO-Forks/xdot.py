@@ -90,6 +90,10 @@ class DotWidget(Gtk.DrawingArea):
         self.presstime = None
         self.highlight = None
         self.highlight_search = False
+        self.scalelines = True
+
+    def set_scale_lines(self, val):
+        self.scalelines = val
 
     def error_dialog(self, message):
         self.emit('error', message)
@@ -156,7 +160,7 @@ class DotWidget(Gtk.DrawingArea):
 
     def set_xdotcode(self, xdotcode, center=True):
         assert isinstance(xdotcode, bytes)
-        parser = XDotParser(xdotcode)
+        parser = XDotParser(xdotcode, self.scalelines)
         self.graph = parser.parse()
         self.zoom_image(self.zoom_ratio, center=center)
 
@@ -501,6 +505,7 @@ class DotWindow(Gtk.Window):
         Gtk.Window.__init__(self)
 
         self.graph = Graph()
+        self.scalelines = True
 
         window = self
 
@@ -547,6 +552,12 @@ class DotWindow(Gtk.Window):
 
         # Create a Toolbar
         toolbar = uimanager.get_widget('/ToolBar')
+
+        #hackish button for toggling line scaling
+        prv = Gtk.ToggleToolButton(Gtk.STOCK_APPLY)
+        prv.connect("toggled", self.toggle_linescale)
+        toolbar.insert(prv, 8)
+
         vbox.pack_start(toolbar, False, False, 0)
 
         vbox.pack_start(self.dotwidget, True, True, 0)
@@ -567,6 +578,11 @@ class DotWindow(Gtk.Window):
         self.textentry.connect("changed", self.textentry_changed, self.textentry);
 
         self.show_all()
+
+
+    def toggle_linescale(self, widget, data=None):
+      self.set_scale_lines(not widget.get_active())
+      self.dotwidget.reload()
 
     def find_text(self, entry_text):
         found_items = []
@@ -600,6 +616,9 @@ class DotWindow(Gtk.Window):
             dot_widget.animate_to(found_items[0].x, found_items[0].y)
         #fix to release focus. Otherwise, hotkeys don't work anymore after textsearch
         self.set_focus(self.dotwidget)
+
+    def set_scale_lines(self, val):
+        self.dotwidget.set_scale_lines(val)
 
     def set_filter(self, filter):
         self.dotwidget.set_filter(filter)

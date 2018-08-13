@@ -255,10 +255,12 @@ class PolygonShape(Shape):
 
 class LineShape(Shape):
 
-    def __init__(self, pen, points):
+    def __init__(self, pen, points, scalelines=True):
         Shape.__init__(self)
         self.pen = pen.copy()
         self.points = points
+        self.scalelines = scalelines
+
 
     def draw(self, cr, highlight=False):
         x0, y0 = self.points[0]
@@ -267,19 +269,27 @@ class LineShape(Shape):
             cr.line_to(x1, y1)
         pen = self.select_pen(highlight)
         cr.set_dash(pen.dash)
-        cr.set_line_width(pen.linewidth)
         cr.set_source_rgba(*pen.color)
-        cr.stroke()
+        if self.scalelines:
+                cr.set_line_width(pen.linewidth)
+                cr.stroke()
+        else:    
+            cr.save()
+            cr.set_line_width(pen.linewidth)
+            cr.identity_matrix()
+            cr.stroke()
+            cr.restore()
 
 
 class BezierShape(Shape):
 
-    def __init__(self, pen, points, filled=False):
+    def __init__(self, pen, points, filled=False, scalelines=True):
         Shape.__init__(self)
         self.pen = pen.copy()
         self.points = points
         self.filled = filled
-
+        self.scalelines = scalelines
+        
     def draw(self, cr, highlight=False):
         x0, y0 = self.points[0]
         cr.move_to(x0, y0)
@@ -295,10 +305,17 @@ class BezierShape(Shape):
             cr.fill()
         else:
             cr.set_dash(pen.dash)
-            cr.set_line_width(pen.linewidth)
             cr.set_source_rgba(*pen.color)
-            cr.stroke()
-
+            if self.scalelines:
+                cr.set_line_width(pen.linewidth)
+                cr.stroke()
+            else:
+                cr.save()
+                cr.set_line_width(pen.linewidth)
+                cr.identity_matrix()
+                cr.stroke()
+                cr.restore()    
+            
 
 class CompoundShape(Shape):
 

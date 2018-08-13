@@ -85,16 +85,20 @@ class XDotAttrParser:
     - http://www.graphviz.org/doc/info/output.html#d:xdot
     """
 
-    def __init__(self, parser, buf):
+    def __init__(self, parser, buf, scalelines=True):
         self.parser = parser
         self.buf = buf
         self.pos = 0
 
         self.pen = Pen()
         self.shapes = []
+        self.scalelines = scalelines
 
     def __bool__(self):
         return self.pos < len(self.buf)
+
+    def set_scale_lines(self, val):
+        self.scalelines = val    
 
     def read_code(self):
         pos = self.buf.find(b" ", self.pos)
@@ -282,13 +286,13 @@ class XDotAttrParser:
         self.shapes.append(elements.ImageShape(self.pen, x0, y0, w, h, path))
 
     def handle_line(self, points):
-        self.shapes.append(elements.LineShape(self.pen, points))
+        self.shapes.append(elements.LineShape(self.pen, points, self.scalelines))
 
     def handle_bezier(self, points, filled=False):
         if filled:
             # xdot uses this to mean "draw a filled shape with an outline"
-            self.shapes.append(elements.BezierShape(self.pen, points, filled=True))
-        self.shapes.append(elements.BezierShape(self.pen, points))
+            self.shapes.append(elements.BezierShape(self.pen, points, filled=True, scalelines=self.scalelines))
+        self.shapes.append(elements.BezierShape(self.pen, points, scalelines=self.scalelines))
 
     def handle_polygon(self, points, filled=False):
         if filled:
@@ -424,7 +428,7 @@ class XDotParser(DotParser):
 
     XDOTVERSION = '1.7'
 
-    def __init__(self, xdotcode):
+    def __init__(self, xdotcode, scalelines=True):
         lexer = DotLexer(buf=xdotcode)
         DotParser.__init__(self, lexer)
 
@@ -435,7 +439,8 @@ class XDotParser(DotParser):
         self.top_graph = True
         self.width = 0
         self.height = 0
-
+        self.scalelines = scalelines
+       
     def handle_graph(self, attrs):
         if self.top_graph:
             # Check xdot version
@@ -470,7 +475,7 @@ class XDotParser(DotParser):
 
         for attr in ("_draw_", "_ldraw_", "_hdraw_", "_tdraw_", "_hldraw_", "_tldraw_"):
             if attr in attrs:
-                parser = XDotAttrParser(self, attrs[attr])
+                parser = XDotAttrParser(self, attrs[attr], self.scalelines)
                 self.shapes.extend(parser.parse())
 
     def handle_node(self, id, attrs):
@@ -485,7 +490,7 @@ class XDotParser(DotParser):
         shapes = []
         for attr in ("_draw_", "_ldraw_"):
             if attr in attrs:
-                parser = XDotAttrParser(self, attrs[attr])
+                parser = XDotAttrParser(self, attrs[attr], self.scalelines)
                 shapes.extend(parser.parse())
         try:
             url = attrs['URL']
@@ -506,9 +511,10 @@ class XDotParser(DotParser):
 
         points = self.parse_edge_pos(pos)
         shapes = []
+
         for attr in ("_draw_", "_ldraw_", "_hdraw_", "_tdraw_", "_hldraw_", "_tldraw_"):
             if attr in attrs:
-                parser = XDotAttrParser(self, attrs[attr])
+                parser = XDotAttrParser(self, attrs[attr], self.scalelines)
                 shapes.extend(parser.parse())
         if shapes:
             src = self.node_by_name[src_id]
