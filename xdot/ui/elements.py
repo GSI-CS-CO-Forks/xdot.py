@@ -358,8 +358,9 @@ class Jump(object):
 class Element(CompoundShape):
     """Base class for graph nodes and edges."""
 
-    def __init__(self, shapes):
+    def __init__(self, shapes, custom_attrs=None):
         CompoundShape.__init__(self, shapes)
+        self.custom_attrs=custom_attrs
 
     def is_inside(self, x, y):
         return False
@@ -370,11 +371,14 @@ class Element(CompoundShape):
     def get_jump(self, x, y):
         return None
 
+    def get_custom_attrs(custom_attrs):
+        return self.custom_attrs
+
 
 class Node(Element):
 
-    def __init__(self, id, x, y, w, h, shapes, url):
-        Element.__init__(self, shapes)
+    def __init__(self, id, x, y, w, h, shapes, url, custom_attrs=None):
+        Element.__init__(self, shapes, custom_attrs)
 
         self.id = id
         self.x = x
@@ -414,8 +418,8 @@ def square_distance(x1, y1, x2, y2):
 
 class Edge(Element):
 
-    def __init__(self, src, dst, points, shapes):
-        Element.__init__(self, shapes)
+    def __init__(self, src, dst, points, shapes, custom_attrs=None):
+        Element.__init__(self, shapes, custom_attrs)
         self.src = src
         self.dst = dst
         self.points = points

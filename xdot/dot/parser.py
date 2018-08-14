@@ -478,6 +478,16 @@ class XDotParser(DotParser):
                 parser = XDotAttrParser(self, attrs[attr], self.scalelines)
                 self.shapes.extend(parser.parse())
 
+    def parse_custom_attrs(self, attrs):
+        custom_attrs = {}
+        for attr in attrs:
+            if attr not in ("_draw_", "_ldraw_", "_hdraw_", "_tdraw_", "_hldraw_", "_tldraw_", "width", "height", "penwidth", "shape", "fillcolor", "color", "style", "pos"):
+                parser = DotParser(DotLexer(buf=attrs[attr]) )
+                value, _ = parser.parse_attr()
+                custom_attrs[attr] = value
+        return custom_attrs
+
+
     def handle_node(self, id, attrs):
         try:
             pos = attrs['pos']
@@ -498,7 +508,9 @@ class XDotParser(DotParser):
             url = None
         else:
             url = url.decode('utf-8')
-        node = elements.Node(id, x, y, w, h, shapes, url)
+
+        custom_attrs = self.parse_custom_attrs(attrs)
+        node = elements.Node(id, x, y, w, h, shapes, url, custom_attrs)
         self.node_by_name[id] = node
         if shapes:
             self.nodes.append(node)
@@ -519,7 +531,8 @@ class XDotParser(DotParser):
         if shapes:
             src = self.node_by_name[src_id]
             dst = self.node_by_name[dst_id]
-            self.edges.append(elements.Edge(src, dst, points, shapes))
+            custom_attrs = self.parse_custom_attrs(attrs)
+            self.edges.append(elements.Edge(src, dst, points, shapes, custom_attrs))
 
     def parse(self):
         DotParser.parse(self)

@@ -484,6 +484,21 @@ class FindMenuToolAction(Gtk.Action):
         return Gtk.ToolItem()
 
 
+class AttribWindow(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self)
+        self.connect('delete_event', self.delete_event)
+
+    def delete_event(self, widget, event=None):
+        print ("Here")
+        self.hide()
+        return True
+
+
+
+
+
+
 class DotWindow(Gtk.Window):
 
     ui = '''
@@ -510,15 +525,18 @@ class DotWindow(Gtk.Window):
 
         self.graph = Graph()
         self.scalelines = True
+        self.show_inspection_window = False
+
 
         window = self
 
         window.set_title(self.base_title)
         window.set_default_size(width, height)
+        window.maximize()
         vbox = Gtk.VBox()
         window.add(vbox)
 
-        self.dotwidget = widget or DotWidget()
+        self.dotwidget = widget or CustomAttrsDotWidget()
         self.dotwidget.connect("error", lambda e, m: self.error_dialog(m))
 
         # Create a UIManager instance
@@ -561,6 +579,10 @@ class DotWindow(Gtk.Window):
         prv = Gtk.ToggleToolButton(Gtk.STOCK_APPLY)
         prv.connect("toggled", self.toggle_linescale)
         toolbar.insert(prv, 8)
+        #hackish button for enabling inspection window
+        ins = Gtk.ToggleToolButton(Gtk.STOCK_APPLY)
+        ins.connect("toggled", self.toggle_overlay)
+        toolbar.insert(ins, 9)
 
         vbox.pack_start(toolbar, False, False, 0)
 
@@ -582,6 +604,14 @@ class DotWindow(Gtk.Window):
         self.textentry.connect("changed", self.textentry_changed, self.textentry);
 
         self.show_all()
+        #Attribute Widget
+        self.winfloat = AttribWindow()
+        self.winfloat.set_title("Custom Attributes")
+        self.winfloat.set_keep_above(True)
+
+
+    def toggle_overlay(self, widget, data=None):
+      self.set_inspection_window(widget.get_active())
 
 
     def toggle_linescale(self, widget, data=None):
@@ -629,6 +659,9 @@ class DotWindow(Gtk.Window):
 
     def set_scale_lines(self, val):
         self.dotwidget.set_scale_lines(val)
+
+    def set_inspection_window(self, val):
+        self.show_inspection_window = val
 
     def set_filter(self, filter):
         self.dotwidget.set_filter(filter)
@@ -697,3 +730,40 @@ class DotWindow(Gtk.Window):
         dlg.set_title(self.base_title)
         dlg.run()
         dlg.destroy()
+
+    def update_overlay(self, el_id, custom_attrs):
+        if self.show_inspection_window:
+            for element in self.winfloat.get_children():
+                self.winfloat.remove(element)
+            self.winfloat.add(custom_attrs)
+            self.winfloat.set_title(el_id)
+            self.winfloat.show_all()
+
+
+class CustomAttrsDotWidget(DotWidget):
+
+        def __init__(self):
+            DotWidget.__init__(self)
+            self.custom_attrs_store = Gtk.ListStore(str, str)
+            self.custom_attrs_view  = Gtk.TreeView(self.custom_attrs_store)
+            column0 = Gtk.TreeViewColumn("Property", Gtk.CellRendererText(), text=0)
+            column1 = Gtk.TreeViewColumn("Value", Gtk.CellRendererText(), text=1)
+            self.custom_attrs_view.append_column(column0)
+            self.custom_attrs_view.append_column(column1)
+
+
+        def on_click(self, element, event):
+            if element is not None:
+                self.custom_attrs_store.clear()
+                for key, value in sorted(element.custom_attrs.items()):
+                    self.custom_attrs_store.append([key, value.decode("utf-8")])
+                if hasattr(element, 'id'):
+                    self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
+                else:
+                    self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
+
+
+                return False
+            else:
+                print("nothing selected")
+                return True
