@@ -121,3 +121,39 @@ class ZoomToAnimation(MoveToAnimation):
         self.dot_widget.zoom_ratio = c*t + b*t*(1 - t) + a*(1 - t)
         self.dot_widget.zoom_to_fit_on_resize = False
         MoveToAnimation.animate(self, t)
+
+
+class ZoomToAreaAnimation(MoveToAnimation):
+    def __init__(self, dot_widget, x1, y1, x2, y2):
+        target_x = (x1 + x2) / 2
+        target_y = (y1 + y2) / 2
+        MoveToAnimation.__init__(self, dot_widget, target_x, target_y)
+        rect = self.dot_widget.get_allocation()
+
+        self.source_zoom = dot_widget.zoom_ratio
+        width = abs(x1 - x2)
+        height = abs(y1 - y2)
+        if width == 0 and height == 0:
+            self.target_zoom = self.source_zoom
+        else:
+            self.target_zoom = min(
+                float(rect.width)/float(width),
+                float(rect.height)/float(height)
+            )
+        self.extra_zoom = 0
+
+        middle_zoom = 0.5 * (self.source_zoom + self.target_zoom)
+
+        distance = math.hypot(self.source_x - self.target_x,
+                              self.source_y - self.target_y)
+        visible = min(rect.width, rect.height) / self.dot_widget.zoom_ratio
+        visible *= 0.9
+        if distance > 0:
+            desired_middle_zoom = visible / distance
+            self.extra_zoom = min(0, 4 * (desired_middle_zoom - middle_zoom))
+
+    def animate(self, t):
+        a, b, c = self.source_zoom, self.extra_zoom, self.target_zoom
+        self.dot_widget.zoom_ratio = c*t + b*t*(1 - t) + a*(1 - t)
+        self.dot_widget.zoom_to_fit_on_resize = False
+        MoveToAnimation.animate(self, t)

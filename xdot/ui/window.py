@@ -450,6 +450,10 @@ class DotWidget(Gtk.DrawingArea):
         self.animation = animation.ZoomToAnimation(self, x, y)
         self.animation.start()
 
+    def animate_to_area(self, x1, y1, x2, y2):
+        self.animation = animation.ZoomToAreaAnimation(self, x1, y1, x2, y2)
+        self.animation.start()
+
     def window2graph(self, x, y):
         rect = self.get_allocation()
         x -= 0.5*rect.width
@@ -614,6 +618,12 @@ class DotWindow(Gtk.Window):
         dot_widget.set_highlight(found_items, search=True)
         if(len(found_items) == 1):
             dot_widget.animate_to(found_items[0].x, found_items[0].y)
+        elif(len(found_items) > 1):
+            #find boundary box of found nodes
+            xs = [item.x for item in found_items]
+            ys = [item.y for item in found_items]
+            dot_widget.animate_to_area(min(xs), min(ys), max(xs), max(ys))
+
         #fix to release focus. Otherwise, hotkeys don't work anymore after textsearch
         self.set_focus(self.dotwidget)
 
