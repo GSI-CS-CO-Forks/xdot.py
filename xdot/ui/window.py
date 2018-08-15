@@ -91,6 +91,29 @@ class DotWidget(Gtk.DrawingArea):
         self.highlight = None
         self.highlight_search = False
         self.scalelines = True
+        # right click menu for copying node name to clipboard
+        rclickmenu = Gtk.Menu()
+        rclickmenu_item = Gtk.MenuItem("Copy name to clipboard")
+        rclickmenu.append(rclickmenu_item)
+        rclickmenu_item.show()
+        self.connect_object("event", self.rbutton_press, rclickmenu)
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        rclickmenu_item.connect("activate", self.copy_to_clipboard)
+
+
+    def copy_to_clipboard(self, widget):
+        self.clipboard.set_text(self.tmpclipboard, -1)
+
+    def rbutton_press(self, widget, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button.button == 3:
+            # get graph element and open right click menu
+            x, y = int(event.x), int(event.y)
+            el = self.get_element(x, y)
+            if hasattr(el, 'id'):
+                self.tmpclipboard=el.id.decode("utf-8") # we copy to clipboard popup is clicked, not now. save id for copy_to_clipboard
+                widget.popup(None, None, None, None, event.button.button, event.time)
+            return True
+
 
     def set_scale_lines(self, val):
         self.scalelines = val
