@@ -136,7 +136,7 @@ class ZoomToAreaAnimation(MoveToAnimation):
         if width == 0 and height == 0:
             self.target_zoom = self.source_zoom
         else:
-            self.target_zoom = min(
+            self.target_zoom = 0.7 * min(
                 float(rect.width)/float(width),
                 float(rect.height)/float(height)
             )
