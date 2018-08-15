@@ -610,8 +610,10 @@ class DotWindow(Gtk.Window):
         self.winfloat.set_keep_above(True)
 
 
+
     def toggle_overlay(self, widget, data=None):
       self.set_inspection_window(widget.get_active())
+      self.winfloat.show_all()
 
 
     def toggle_linescale(self, widget, data=None):
@@ -623,7 +625,7 @@ class DotWindow(Gtk.Window):
         dot_widget = self.dotwidget
         regexp = re.compile(entry_text)
         for element in dot_widget.graph.nodes + dot_widget.graph.edges:
-            if element.search_text(regexp):
+            if element.search_text(regexp, self.show_inspection_window):
                 found_items.append(element)
         return found_items
 
@@ -750,20 +752,17 @@ class CustomAttrsDotWidget(DotWidget):
             column1 = Gtk.TreeViewColumn("Value", Gtk.CellRendererText(), text=1)
             self.custom_attrs_view.append_column(column0)
             self.custom_attrs_view.append_column(column1)
-
-
+            
         def on_click(self, element, event):
-            if element is not None:
-                self.custom_attrs_store.clear()
-                for key, value in sorted(element.custom_attrs.items()):
-                    self.custom_attrs_store.append([key, value.decode("utf-8")])
-                if hasattr(element, 'id'):
-                    self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
+            if self.get_parent().get_parent().show_inspection_window: # only get custom attributes if inspection is toggled
+                if element is not None:
+                    self.custom_attrs_store.clear()
+                    for key, value in sorted(element.custom_attrs.items()):
+                        self.custom_attrs_store.append([key, value.decode("utf-8")])
+                    if hasattr(element, 'id'):
+                        self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
+                    else:
+                        self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
+                    return False
                 else:
-                    self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
-
-
-                return False
-            else:
-                print("nothing selected")
-                return True
+                    return True

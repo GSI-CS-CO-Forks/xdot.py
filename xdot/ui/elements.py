@@ -327,7 +327,7 @@ class CompoundShape(Shape):
         for shape in self.shapes:
             shape.draw(cr, highlight=highlight)
 
-    def search_text(self, regexp):
+    def search_text(self, regexp, search_attr=False):
         for shape in self.shapes:
             if shape.search_text(regexp):
                 return True
@@ -371,8 +371,26 @@ class Element(CompoundShape):
     def get_jump(self, x, y):
         return None
 
-    def get_custom_attrs(custom_attrs):
+    def get_custom_attrs(self):
         return self.custom_attrs
+
+    def get_custom_attrs_string(self):
+        result = str('')
+        for key, value in sorted(self.custom_attrs.items()):
+            result += key + "=" + value.decode("utf-8") + " "
+        return result        
+
+    def search_text(self, regexp, search_attr=False):
+        result = False
+        for shape in self.shapes:
+            if shape.search_text(regexp):
+                result = True
+        if search_attr:
+            s = self.get_custom_attrs_string()
+            #print("# " + s)
+            if regexp.search(s) is not None:
+                result = True
+        return result        
 
 
 class Node(Element):
