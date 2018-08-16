@@ -30,8 +30,8 @@ import cairo
 class Shape:
     """Abstract base class for all the drawing shapes."""
 
-    def __init__(self):
-        pass
+    def __init__(self, minlinewidth=0.3):
+        self.minlinewidth=minlinewidth
 
     def draw(self, cr, highlight=False):
         """Draw this shape with the given cairo context"""
@@ -47,6 +47,20 @@ class Shape:
 
     def search_text(self, regexp):
         return False
+
+    def scale_lines(self, cr, highlight=False):
+        xx, yx, xy, yy, x0, y0 = cr.get_matrix()
+        pen = self.select_pen(highlight)
+
+        if (pen.linewidth * min(xx, yy)) < self.minlinewidth:
+            cr.save()
+            cr.set_line_width(pen.linewidth)
+            cr.set_matrix(cairo.Matrix(self.minlinewidth/pen.linewidth, yx, xy, self.minlinewidth/pen.linewidth, x0, y0))
+            cr.stroke()
+            cr.restore()    
+        else:
+            cr.set_line_width(pen.linewidth)
+            cr.stroke()      
 
 
 class TextShape(Shape):
@@ -220,11 +234,11 @@ class EllipseShape(Shape):
         if self.filled:
             cr.set_source_rgba(*pen.fillcolor)
             cr.fill()
+            self.scale_lines(cr, highlight)
         else:
             cr.set_dash(pen.dash)
-            cr.set_line_width(pen.linewidth)
             cr.set_source_rgba(*pen.color)
-            cr.stroke()
+            self.scale_lines(cr, highlight)
 
 
 class PolygonShape(Shape):
@@ -246,21 +260,19 @@ class PolygonShape(Shape):
             cr.set_source_rgba(*pen.fillcolor)
             cr.fill_preserve()
             cr.fill()
+            self.scale_lines(cr, highlight)
         else:
             cr.set_dash(pen.dash)
-            cr.set_line_width(pen.linewidth)
             cr.set_source_rgba(*pen.color)
-            cr.stroke()
+            self.scale_lines(cr, highlight)
 
 
 class LineShape(Shape):
 
-    def __init__(self, pen, points, scalelines=True):
+    def __init__(self, pen, points):
         Shape.__init__(self)
         self.pen = pen.copy()
         self.points = points
-        self.scalelines = scalelines
-
 
     def draw(self, cr, highlight=False):
         x0, y0 = self.points[0]
@@ -270,25 +282,16 @@ class LineShape(Shape):
         pen = self.select_pen(highlight)
         cr.set_dash(pen.dash)
         cr.set_source_rgba(*pen.color)
-        if self.scalelines:
-                cr.set_line_width(pen.linewidth)
-                cr.stroke()
-        else:    
-            cr.save()
-            cr.set_line_width(pen.linewidth)
-            cr.identity_matrix()
-            cr.stroke()
-            cr.restore()
+        self.scale_lines(cr, highlight)
 
 
 class BezierShape(Shape):
 
-    def __init__(self, pen, points, filled=False, scalelines=True):
+    def __init__(self, pen, points, filled=False):
         Shape.__init__(self)
         self.pen = pen.copy()
         self.points = points
         self.filled = filled
-        self.scalelines = scalelines
         
     def draw(self, cr, highlight=False):
         x0, y0 = self.points[0]
@@ -303,18 +306,12 @@ class BezierShape(Shape):
             cr.set_source_rgba(*pen.fillcolor)
             cr.fill_preserve()
             cr.fill()
+            self.scale_lines(cr, highlight)
         else:
             cr.set_dash(pen.dash)
             cr.set_source_rgba(*pen.color)
-            if self.scalelines:
-                cr.set_line_width(pen.linewidth)
-                cr.stroke()
-            else:
-                cr.save()
-                cr.set_line_width(pen.linewidth)
-                cr.identity_matrix()
-                cr.stroke()
-                cr.restore()    
+            self.scale_lines(cr, highlight)
+            
             
 
 class CompoundShape(Shape):
