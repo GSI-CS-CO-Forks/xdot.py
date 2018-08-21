@@ -42,7 +42,7 @@ from ..dot.parser import XDotParser
 from . import animation
 from . import actions
 from .elements import Graph
-
+from ..gsi.schedules import *
 
 class DotWidget(Gtk.DrawingArea):
     """GTK widget that draws dot graphs."""
@@ -755,23 +755,37 @@ class DotWindow(Gtk.Window):
             self.winfloat.show_all()
 
 
+
+
 class CustomAttrsDotWidget(DotWidget):
 
         def __init__(self):
             DotWidget.__init__(self)
-            self.custom_attrs_store = Gtk.ListStore(str, str)
-            self.custom_attrs_view  = Gtk.TreeView(self.custom_attrs_store)
-            column0 = Gtk.TreeViewColumn("Property", Gtk.CellRendererText(), text=0)
-            column1 = Gtk.TreeViewColumn("Value", Gtk.CellRendererText(), text=1)
-            self.custom_attrs_view.append_column(column0)
+            self.custom_attrs_store = Gtk.ListStore(int, str, str, str, str)
+            self.sortedModel = Gtk.TreeModelSort(self.custom_attrs_store)
+            self.custom_attrs_view  = Gtk.TreeView(self.sortedModel)
+            column0 = Gtk.TreeViewColumn("Index", Gtk.CellRendererText(), text=0)
+            column1 = Gtk.TreeViewColumn("Tag", Gtk.CellRendererText(), text=1)
+            column2 = Gtk.TreeViewColumn("Raw", Gtk.CellRendererText(), text=2)
+            column3 = Gtk.TreeViewColumn("Description", Gtk.CellRendererText(), text=3)
+            column4 = Gtk.TreeViewColumn("Value", Gtk.CellRendererText(), text=4)
+            #self.custom_attrs_view.append_column(column0)
             self.custom_attrs_view.append_column(column1)
+            #self.custom_attrs_view.append_column(column2)
+            self.custom_attrs_view.append_column(column3)
+            self.custom_attrs_view.append_column(column4)
+            self.sortedModel.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+
             
         def on_click(self, element, event):
             if self.get_parent().get_parent().show_inspection_window: # only get custom attributes if inspection is toggled
                 if element is not None:
                     self.custom_attrs_store.clear()
-                    for key, value in sorted(element.custom_attrs.items()):
-                        self.custom_attrs_store.append([key, value.decode("utf-8")])
+                    self.thisElem = getGsiDmElement(element.custom_attrs)
+                    attrs = self.thisElem.listAll()
+
+                    for item in attrs:
+                        self.custom_attrs_store.append([int(item.index), item.tag, item.raw, item.desc, item.value])
                     if hasattr(element, 'id'):
                         self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
                     else:
