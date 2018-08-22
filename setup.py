@@ -14,12 +14,24 @@ from setuptools import setup
 
 setup(
     name='xdot',
-    version='0.9',
-    author='Jose Fonseca',
-    author_email='jose.r.fonseca@gmail.com',
-    url='https://github.com/jrfonseca/xdot.py',
+    version='0.91',
+    author='Jose Fonseca, Mathias Kreider',
+    author_email='jose.r.fonseca@gmail.com; m.kreider@gsi.de',
+    url='https://github.com/GSI-CS-CO-Forks/xdot.py.git',
     description="Interactive viewer for Graphviz dot files",
     long_description="""
+        Fork of xdot viewer, intended for merge. Original bei Jose Fonseca,
+        forked by Mathias Kreider Aug 2018 @ GSI Darmstadt.
+
+        Changes:
+        - Enforcing minimum linewidth when zooming so objects don't disappear
+        - Added inspection window for bundled node and edge properties
+        - Extended regex search support to bundled properties if inspection is turned on
+        - Added ability to pass arguments to filter (dot, neato, etc) from CLI
+        - Added zoom animation to bounding box of nodes in search result
+        - various bug fixes
+        
+        Original description:
         xdot.py is an interactive viewer for graphs written in Graphviz's dot
         language.
 
