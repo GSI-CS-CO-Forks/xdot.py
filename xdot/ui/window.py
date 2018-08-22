@@ -510,7 +510,6 @@ class AttribWindow(Gtk.Window):
         self.connect('delete_event', self.delete_event)
 
     def delete_event(self, widget, event=None):
-        print ("Here")
         self.hide()
         return True
 
