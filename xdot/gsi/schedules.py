@@ -48,7 +48,8 @@ def getGsiDmElement(attrs):
   try:
     elem = typeDict[eType](attrs)
   except KeyError:
-     elem = GsiDmRaw(attrs) #unknown type, just take the raw type class  
+     elem = GsiDmRaw(attrs) #unknown type, just take the raw type class
+     print("unknown type detected")  
   return elem
 
 class viewAttrs():
@@ -311,12 +312,14 @@ class GsiDmCmd(GsiDmEvent):
     })
 
 
+
+
     self.assign()
     self.convertTime()
 
   def convertTime(self):
     super(GsiDmCmd, self).convertTime()
-    self.d['tvalid'] =  self.nsTime2scientific(self.tvalid)   
+    self.d['tvalid'] =  self.nsTime2scientific(self.d['tvalid'])   
 
 class GsiDmNop(GsiDmCmd):
   def __init__(self, attrs):
