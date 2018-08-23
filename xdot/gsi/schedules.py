@@ -48,7 +48,7 @@ def getGsiDmElement(attrs):
   try:
     elem = typeDict[eType](attrs)
   except KeyError:
-     elem = None 
+     elem = GsiDmRaw(attrs) #unknown type, just take the raw type class  
   return elem
 
 class viewAttrs():
@@ -59,13 +59,51 @@ class viewAttrs():
     self.desc   = desc
     self.value  = value
 
-class GsiDmEdge():
+
+class GsiDmBase():
+  def __init__(self, attrs):
+      self.attrs          = attrs
+      self.d              = {}
+      self.prettyD        = {}
+      self.prettyTypeDict = {}
+      self.indexD         = {}
+
+
+  def nsTime2scientific(self, nsTime):
+    ret = '{0:.10e} s'.format(Decimal(float(nsTime) / 1e+9))
+    return ret
+
+  def assign(self):
+    for key, value in self.attrs.items():
+      self.d[key] = value.decode("utf-8")
+
+  def convertTime(self):
+    pass      
+
+  def listAll(self):
+    ret = []
+    for key in self.d:
+      index=9999999
+      desc='-'
+      if key in self.prettyD:
+        desc=self.prettyD[key]
+      if key in self.indexD:
+        index=self.indexD[key]
+
+      ret.append(viewAttrs(index=index, tag=key, raw=self.d[key], desc=desc, value=self.d[key]))
+    return ret
+
+class GsiDmRaw(GsiDmBase):
+  def __init__(self, attrs):
+    super(GsiDmRaw, self).__init__(attrs)
+    self.assign()  
+
+class GsiDmEdge(GsiDmBase):
     def __init__(self, attrs):
-      self.attrs = attrs
-      self.d = {}
+      super(GsiDmEdge, self).__init__(attrs)
       self.d['type']     = ''
 
-      self.prettyTypeDict = {
+      self.prettyTypeDict.update({
         "defdst"     : "Default Destination",
         "altdst"     : "Default Destination",
         "listdst"    : "Destination List",
@@ -81,165 +119,128 @@ class GsiDmEdge():
         "dynflowdst" : "Dynamic Flow Destination (carpeDM internal)",
         "resflowdst" : "Resident Flow Destination (carpeDM internal)",
         "domflowdst" : "Dominant Flow Destination (carpeDM internal)",
-      }
+      })
 
-      self.prettyD = {
+      self.prettyD.update({
         'type'      : 'Edge Type',
-      }
+      })
 
-      self.indexD = {  
+      self.indexD.update({  
         'type'      : '00',
-      }
+      })
 
       self.assign()
 
-    def nsTime2scientific(self, nsTime):
-      pass
 
 
 
-    def assign(self):
-      for key, value in self.attrs.items():
-        if key in self.d:
-          self.d[key] = value.decode("utf-8")
+class GsiDmNode(GsiDmBase):
+  def __init__(self, attrs):
+    super(GsiDmNode, self).__init__(attrs)
 
-    def convertTime(self):
-      pass      
+    self.d.update({
+      'type'      : '',
+      'node_id'   : '',      
+      'cpu'       : '',
+      'thread'    : '', 
+      'flags'     : '',  
+      'patentry'  : 'false',    
+      'patexit'   : 'false',    
+      'pattern'   : '',    
+      'bpentry'   : 'false',    
+      'bpexit'    : 'false',  
+      'beamproc'  : '',
+    })
+          
+    self.prettyTypeDict.update({
+      'tmsg'       :  'Timing Message',
+      'noop'       :  'Noop Command',
+      'flow'       :  'Flow Command',
+      'flush'      :  'Flush Command',
+      'wait'       :  'Wait Command',
+      'block'      :  'Block',
+      'blockfixed' :  'Block',
+      'blockalign' :  'Block (aligns to time grid)',
+      'qinfo'      :  'Queue Information',
+      'listdst'    :  'Destination List',
+      'qbuf'       :  'Queue Buffer',
+      'meta'       :  'Meta Information',
+    })
 
-    def listAll(self):
-      ret = []
-      for key in self.d:
-        ret.append(viewAttrs(index=self.indexD[key], tag=key, raw=self.d[key], desc=self.prettyD[key], value=self.d[key]))
-      return ret 
+    self.prettyD.update({
+      'type'      : 'Node Type',
+      'node_id'   : 'Name',
+      'cpu'       : 'CPU',
+      'thread'    : 'Thread',
+      'flags'     : 'Flags',
+      'patentry'  : 'Pattern entry',
+      'patexit'   : 'Pattern exit',
+      'pattern'   : 'Pattern Name',
+      'bpentry'   : 'Beamprocess entry',
+      'bpexit'    : 'Beamprocess exit',
+      'beamproc'  : 'Beamprocess Name',
+      'tperiod'   : 'Time Block Period',
+      'qil'       : 'Has high prio Queue',
+      'qhi'       : 'Has medium prio Queue',
+      'qlo'       : 'Has low prio Queue',
+      'toffs'     : 'Time Offset',
+      'id'        : 'ID',
+      'fid'       : ' +- Format',
+      'gid'       : ' +- Group',
+      'evtno'     : ' +- Evt No',
+      'sid'       : ' +- Sequence',
+      'bpid'      : ' +- Beamprocess',
+      'beamin'    : ' +- Beam in',
+      'reqnobeam' : ' +- Request no beam',
+      'vacc'      : ' +- Virt. Accelerator',
+      'res'       : 'Reserved',
+      'par'       : 'Parameter',
+      'tef'       : 'Time Extension Field',
+      'tvalid'    : 'Valid Time',
+      'vabs'      : 'Valid Time is abs.',
+      'prio'      : 'Priority',
+      'qty'       : 'Quantity',
+      'permanent' : 'Flow is permanent',
+      'twait'     : 'Wait Time',
+    })
 
-class GsiDmNode():
-    def __init__(self, attrs):
-      self.attrs = attrs
-      self.d = {}
-      
-      self.d['type']     = ''
-      self.d['node_id']  = ''      
-      self.d['cpu']      = ''
-      self.d['thread']   = ''  
-      self.d['flags']    = ''  
-      self.d['patentry'] = 'false'    
-      self.d['patexit']  = 'false'    
-      self.d['pattern']  = ''    
-      self.d['bpentry']  = 'false'    
-      self.d['bpexit']   = 'false'  
-      self.d['beamproc'] = ''    
+    self.indexD.update({  
+      'type'      : '00',
+      'node_id'   : '01',
+      'cpu'       : '02',
+      'thread'    : '03',
+      'flags'     : '04',
+      'patentry'  : '05',
+      'patexit'   : '06',
+      'pattern'   : '07',
+      'bpentry'   : '08',
+      'bpexit'    : '09',
+      'beamproc'  : '10',
+      'tperiod'   : '11',
+      'qil'       : '12',
+      'qhi'       : '13',
+      'qlo'       : '14',
+      'toffs'     : '15',
+      'id'        : '16',
+      'fid'       : '17',
+      'gid'       : '18',
+      'evtno'     : '19',
+      'sid'       : '20',
+      'bpid'      : '21',
+      'beamin'    : '22',
+      'reqnobeam' : '23',
+      'vacc'      : '24',
+      'res'       : '25',
+      'par'       : '26',
+      'tef'       : '27',
+      'tvalid'    : '28',
+      'vabs'      : '29',
+      'prio'      : '30',
+      'qty'       : '31',
+      'permanent' : '32',
+      'twait'     : '33',
+    })
 
-
-      self.prettyTypeDict = {
-
-        'tmsg'       :  'Timing Message',
-        'noop'       :  'Noop Command',
-        'flow'       :  'Flow Command',
-        'flush'      :  'Flush Command',
-        'wait'       :  'Wait Command',
-        'block'      :  'Block',
-        'blockfixed' :  'Block',
-        'blockalign' :  'Block (aligns to time grid)',
-        'qinfo'      :  'Queue Information',
-        'listdst'    :  'Destination List',
-        'qbuf'       :  'Queue Buffer',
-        'meta'       :  'Meta Information',
-      }
-
-      self.prettyD = {
-        'type'      : 'Node Type',
-        'node_id'   : 'Name',
-        'cpu'       : 'CPU',
-        'thread'    : 'Thread',
-        'flags'     : 'Flags',
-        'patentry'  : 'Pattern entry',
-        'patexit'   : 'Pattern exit',
-        'pattern'   : 'Pattern Name',
-        'bpentry'   : 'Beamprocess entry',
-        'bpexit'    : 'Beamprocess exit',
-        'beamproc'  : 'Beamprocess Name',
-        'tperiod'   : 'Time Block Period',
-        'qil'       : 'Has high prio Queue',
-        'qhi'       : 'Has medium prio Queue',
-        'qlo'       : 'Has low prio Queue',
-        'toffs'     : 'Time Offset',
-        'id'        : 'ID',
-        'fid'       : ' +- Format',
-        'gid'       : ' +- Group',
-        'evtno'     : ' +- Evt No',
-        'sid'       : ' +- Sequence',
-        'bpid'      : ' +- Beamprocess',
-        'beamin'    : ' +- Beam in',
-        'reqnobeam' : ' +- Request no beam',
-        'vacc'      : ' +- Virt. Accelerator',
-        'res'       : 'Reserved',
-        'par'       : 'Parameter',
-        'tef'       : 'Time Extension Field',
-        'tvalid'    : 'Valid Time',
-        'vabs'      : 'Valid Time is abs.',
-        'prio'      : 'Priority',
-        'qty'       : 'Quantity',
-        'permanent' : 'Flow is permanent',
-        'twait'     : 'Wait Time',
-      }
-
-      self.indexD = {  
-        'type'      : '00',
-        'node_id'   : '01',
-        'cpu'       : '02',
-        'thread'    : '03',
-        'flags'     : '04',
-        'patentry'  : '05',
-        'patexit'   : '06',
-        'pattern'   : '07',
-        'bpentry'   : '08',
-        'bpexit'    : '09',
-        'beamproc'  : '10',
-        'tperiod'   : '11',
-        'qil'       : '12',
-        'qhi'       : '13',
-        'qlo'       : '14',
-        'toffs'     : '15',
-        'id'        : '16',
-        'fid'       : '17',
-        'gid'       : '18',
-        'evtno'     : '19',
-        'sid'       : '20',
-        'bpid'      : '21',
-        'beamin'    : '22',
-        'reqnobeam' : '23',
-        'vacc'      : '24',
-        'res'       : '25',
-        'par'       : '26',
-        'tef'       : '27',
-        'tvalid'    : '28',
-        'vabs'      : '29',
-        'prio'      : '30',
-        'qty'       : '31',
-        'permanent' : '32',
-        'twait'     : '33',
-      }
-
-    def nsTime2scientific(self, nsTime):
-      ret = '{0:.10e} s'.format(Decimal(float(nsTime) / 1e+9))
-      return ret
-
-
-
-
-    def assign(self):
-      for key, value in self.attrs.items():
-        if key in self.d:
-          self.d[key] = value.decode("utf-8")
-
-    def convertTime(self):
-      pass      
-
-    def listAll(self):
-      ret = []
-      for key in self.d:
-        ret.append(viewAttrs(index=self.indexD[key], tag=key, raw=self.d[key], desc=self.prettyD[key], value=self.d[key]))
-      return ret
 
 
 
@@ -247,10 +248,12 @@ class GsiDmBlock(GsiDmNode):
   def __init__(self, attrs):
     super(GsiDmBlock, self).__init__(attrs)
 
-    self.d['tperiod']  = ''
-    self.d['qil']      = 'false'
-    self.d['qhi']      = 'false'
-    self.d['qlo']      = 'false'
+    self.d.update({
+      'tperiod'  : '',
+      'qil'      : 'false',
+      'qhi'      : 'false',
+      'qlo'      : 'false',
+    })
 
     self.assign()
     self.convertTime()
@@ -277,19 +280,20 @@ class GsiDmTmsg(GsiDmEvent):
   def __init__(self, attrs):
     super(GsiDmTmsg, self).__init__(attrs)
 
-    self.d['id']         = ''
-    self.d['fid']        = ''      
-    self.d['gid']        = ''
-    self.d['evtno']      = ''
-    self.d['sid']        = ''
-    self.d['bpid']       = ''
-    self.d['beamin']     = ''
-    self.d['reqnobeam']  = ''
-    self.d['vacc']       = ''
-    self.d['res']        = ''
-    self.d['par']        = ''
-    self.d['tef']        = ''
-
+    self.d.update({
+      'id'        : '',
+      'fid'       : '',      
+      'gid'       : '',
+      'evtno'     : '',
+      'sid'       : '',
+      'bpid'      : '',
+      'beamin'    : '',
+      'reqnobeam' : '',
+      'vacc'      : '',
+      'res'       : '',
+      'par'       : '',
+      'tef'       : '',
+    })  
 
     self.assign()
     self.convertTime()
@@ -299,11 +303,12 @@ class GsiDmCmd(GsiDmEvent):
   def __init__(self, attrs):
     super(GsiDmCmd, self).__init__(attrs)
 
-    self.d['tvalid']     = ''
-    self.d['vabs']       = 'false'
-    self.d['prio']       = ''
-    self.d['qty']        = ''
-    
+    self.d.update({
+      'tvalid' : '',
+      'vabs'   : 'false',
+      'prio'   : '',
+      'qty'    : '',
+    })
 
 
     self.assign()
@@ -353,6 +358,6 @@ class GsiDmWait(GsiDmCmd):
 
 class GsiDmMeta(GsiDmNode):
   def __init__(self, attrs):
-    super(GsiDmNode, self).__init__(attrs)
+    super(GsiDmMeta, self).__init__(attrs)
     self.assign()
 
