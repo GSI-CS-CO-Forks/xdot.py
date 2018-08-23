@@ -781,14 +781,15 @@ class CustomAttrsDotWidget(DotWidget):
                 if element is not None:
                     self.custom_attrs_store.clear()
                     self.thisElem = getGsiDmElement(element.custom_attrs)
-                    attrs = self.thisElem.listAll()
+                    if self.thisElem is not None:
+                        attrs = self.thisElem.listAll()
 
-                    for item in attrs:
-                        self.custom_attrs_store.append([int(item.index), item.tag, item.raw, item.desc, item.value])
-                    if hasattr(element, 'id'):
-                        self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
-                    else:
-                        self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
-                    return False
+                        for item in attrs:
+                            self.custom_attrs_store.append([int(item.index), item.tag, item.raw, item.desc, item.value])
+                        if hasattr(element, 'id'):
+                            self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
+                        else:
+                            self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
+                        return False
                 else:
                     return True
