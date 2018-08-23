@@ -667,8 +667,14 @@ class DotWindow(Gtk.Window):
             dot_widget.animate_to(found_items[0].x, found_items[0].y)
         elif(len(found_items) > 1):
             #find boundary box of found nodes
-            xs = [item.x for item in found_items]
-            ys = [item.y for item in found_items]
+            xs = []
+            ys = []
+            for item in found_items:
+                try:
+                    xs.append(item.x)
+                    ys.append(item.y)
+                except:
+                    pass
             dot_widget.animate_to_area(min(xs), min(ys), max(xs), max(ys))
 
         #fix to release focus. Otherwise, hotkeys don't work anymore after textsearch
