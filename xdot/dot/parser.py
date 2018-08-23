@@ -477,9 +477,7 @@ class XDotParser(DotParser):
         custom_attrs = {}
         for attr in attrs:
             if attr not in ("_draw_", "_ldraw_", "_hdraw_", "_tdraw_", "_hldraw_", "_tldraw_", "width", "height", "penwidth", "shape", "fillcolor", "color", "style", "pos"):
-                parser = DotParser(DotLexer(buf=attrs[attr]) )
-                value, _ = parser.parse_attr()
-                custom_attrs[attr] = value
+                custom_attrs[attr] = attrs[attr]
         return custom_attrs
 
 
