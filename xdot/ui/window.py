@@ -546,7 +546,7 @@ class DotWindow(Gtk.Window):
 
         self.graph = Graph()
         self.show_inspection_window = False
-
+        self.inspect_id = ''
 
         window = self
 
@@ -741,6 +741,13 @@ class DotWindow(Gtk.Window):
 
     def on_reload(self, action):
         self.dotwidget.reload()
+        
+        #refresh inspection window content
+        if self.show_inspection_window and self.inspect_id != '':
+            dot_widget = self.dotwidget
+            for element in dot_widget.graph.nodes:
+                if element.id.decode("utf-8") == self.inspect_id:
+                    dot_widget.inspect_element(element)
 
     def error_dialog(self, message):
         dlg = Gtk.MessageDialog(parent=self,
@@ -783,7 +790,12 @@ class CustomAttrsDotWidget(DotWidget):
 
             
         def on_click(self, element, event):
-            if self.get_parent().get_parent().show_inspection_window: # only get custom attributes if inspection is toggled
+            self.inspect_element(element)
+            return True
+
+        def inspect_element(self, element):
+            window = self.get_parent().get_parent()
+            if window.show_inspection_window: # only get custom attributes if inspection is toggled
                 if element is not None:
                     self.custom_attrs_store.clear()
                     self.thisElem = getGsiDmElement(element.custom_attrs)
@@ -793,9 +805,9 @@ class CustomAttrsDotWidget(DotWidget):
                         for item in attrs:
                             self.custom_attrs_store.append([int(item.index), item.tag, item.raw, item.desc, item.value])
                         if hasattr(element, 'id'):
-                            self.get_parent().get_parent().update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
+                            window.inspect_id = element.id.decode("utf-8")
+                            window.update_overlay(element.id.decode("utf-8"), self.custom_attrs_view)
                         else:
-                            self.get_parent().get_parent().update_overlay("Edge", self.custom_attrs_view)
-                        return False
-                else:
-                    return True
+                            window.update_overlay("Edge", self.custom_attrs_view)
+                        
+            return True
