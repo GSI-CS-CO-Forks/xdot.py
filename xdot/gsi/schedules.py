@@ -192,6 +192,7 @@ class GsiDmNode(GsiDmBase):
       'sid'       : ' +- Sequence',
       'bpid'      : ' +- Beamprocess',
       'beamin'    : ' +- Beam in',
+      'bpcstart'  : ' +- Beamprocess Chain Start'
       'reqnobeam' : ' +- Request no beam',
       'vacc'      : ' +- Virt. Accelerator',
       'res'       : 'Reserved',
@@ -229,17 +230,18 @@ class GsiDmNode(GsiDmBase):
       'sid'       : '20',
       'bpid'      : '21',
       'beamin'    : '22',
-      'reqnobeam' : '23',
-      'vacc'      : '24',
-      'res'       : '25',
-      'par'       : '26',
-      'tef'       : '27',
-      'tvalid'    : '28',
-      'vabs'      : '29',
-      'prio'      : '30',
-      'qty'       : '31',
-      'permanent' : '32',
-      'twait'     : '33',
+      'bpcstart'  : '23',
+      'reqnobeam' : '24',
+      'vacc'      : '25',
+      'res'       : '26',
+      'par'       : '27',
+      'tef'       : '28',
+      'tvalid'    : '29',
+      'vabs'      : '30',
+      'prio'      : '31',
+      'qty'       : '32',
+      'permanent' : '33',
+      'twait'     : '34',
     })
 
 
@@ -260,8 +262,8 @@ class GsiDmBlock(GsiDmNode):
     self.convertTime()
 
   def convertTime(self):
-    self.d['tperiod'] = self.nsTime2scientific(self.d['tperiod']) 
-  
+    self.d['tperiod'] = self.nsTime2scientific(self.d['tperiod'])
+
 
 class GsiDmEvent(GsiDmNode):
   def __init__(self, attrs):
@@ -274,7 +276,7 @@ class GsiDmEvent(GsiDmNode):
     self.convertTime()
 
   def convertTime(self):
-    self.d['toffs'] =  self.nsTime2scientific(self.d['toffs']) 
+    self.d['toffs'] =  self.nsTime2scientific(self.d['toffs'])
 
 
 class GsiDmTmsg(GsiDmEvent):
@@ -283,18 +285,19 @@ class GsiDmTmsg(GsiDmEvent):
 
     self.d.update({
       'id'        : '',
-      'fid'       : '',      
+      'fid'       : '',
       'gid'       : '',
       'evtno'     : '',
       'sid'       : '',
       'bpid'      : '',
       'beamin'    : '',
+      'bpcstart'  : '',
       'reqnobeam' : '',
       'vacc'      : '',
       'res'       : '',
       'par'       : '',
       'tef'       : '',
-    })  
+    })
 
     self.assign()
     self.convertTime()
@@ -319,7 +322,7 @@ class GsiDmCmd(GsiDmEvent):
 
   def convertTime(self):
     super(GsiDmCmd, self).convertTime()
-    self.d['tvalid'] =  self.nsTime2scientific(self.d['tvalid'])   
+    self.d['tvalid'] =  self.nsTime2scientific(self.d['tvalid'])
 
 class GsiDmNop(GsiDmCmd):
   def __init__(self, attrs):
@@ -328,7 +331,7 @@ class GsiDmNop(GsiDmCmd):
     self.convertTime()
 
 
-  
+
 
 class GsiDmFlow(GsiDmCmd):
   def __init__(self, attrs):
