@@ -192,7 +192,7 @@ class GsiDmNode(GsiDmBase):
       'sid'       : ' +- Sequence',
       'bpid'      : ' +- Beamprocess',
       'beamin'    : ' +- Beam in',
-      'bpcstart'  : ' +- Beamprocess Chain Start'
+      'bpcstart'  : ' +- Beamprocess Chain Start',
       'reqnobeam' : ' +- Request no beam',
       'vacc'      : ' +- Virt. Accelerator',
       'res'       : 'Reserved',
