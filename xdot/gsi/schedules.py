@@ -59,7 +59,13 @@ class viewAttrs():
     self.desc   = desc
     self.value  = value
 
-
+"""
+GsiDmBase and its subclasses handle the properties displayed for a node in xdot.
+If a subclass adds keys to self.d, call assign(self) to add the values from attrs to self.d.
+If a subclass converts a time value to scientific format, add a convertTime method
+to the class, which calls super(..).convertTime for the other values to convert
+and convert the additional value with nsTime2scientific.
+"""
 class GsiDmBase():
   def __init__(self, attrs):
       self.attrs          = attrs
@@ -261,6 +267,7 @@ class GsiDmBlock(GsiDmNode):
     self.convertTime()
 
   def convertTime(self):
+    # not need to call super(..).convertTime(). Superclasses don't have it.
     self.d['tperiod'] = self.nsTime2scientific(self.d['tperiod'])
 
 
@@ -272,6 +279,7 @@ class GsiDmEvent(GsiDmNode):
     self.convertTime()
 
   def convertTime(self):
+    # not need to call super(..).convertTime(). Superclasses don't have it.
     self.d['toffs'] =  self.nsTime2scientific(self.d['toffs'])
 
 
