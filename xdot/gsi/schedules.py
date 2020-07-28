@@ -6,7 +6,7 @@ def extractGsiDmType(attrs):
   for key, value in attrs.items():
     if key == "type":
       ret = value.decode("utf-8")
-  return ret    
+  return ret
 
 
 def getGsiDmElement(attrs):
@@ -42,14 +42,13 @@ def getGsiDmElement(attrs):
     "domflowdst" : GsiDmEdge,
   }
 
-
-
   eType = extractGsiDmType(attrs)
+  # print(f"getGsiDmElement: Type {eType}, {attrs}.")
   try:
     elem = typeDict[eType](attrs)
   except KeyError:
      elem = GsiDmRaw(attrs) #unknown type, just take the raw type class
-     print("unknown type detected")  
+     print(f"unknown type {eType}, {attrs} detected")
   return elem
 
 class viewAttrs():
@@ -69,9 +68,13 @@ class GsiDmBase():
       self.prettyTypeDict = {}
       self.indexD         = {}
 
-
   def nsTime2scientific(self, nsTime):
-    ret = '{0:.10e} s'.format(Decimal(float(nsTime) / 1e+9))
+    if ('e+' in nsTime) or ('e-' in nsTime):
+      ret = nsTime
+    else:
+      if nsTime == '':
+        nsTime = 0
+      ret = '{0:.10e} s'.format(Decimal(float(nsTime) / 1e+9))
     return ret
 
   def assign(self):
@@ -79,7 +82,7 @@ class GsiDmBase():
       self.d[key] = value.decode("utf-8")
 
   def convertTime(self):
-    pass      
+    pass
 
   def listAll(self):
     ret = []
@@ -97,7 +100,7 @@ class GsiDmBase():
 class GsiDmRaw(GsiDmBase):
   def __init__(self, attrs):
     super(GsiDmRaw, self).__init__(attrs)
-    self.assign()  
+    self.assign()
 
 class GsiDmEdge(GsiDmBase):
     def __init__(self, attrs):
@@ -126,13 +129,11 @@ class GsiDmEdge(GsiDmBase):
         'type'      : 'Edge Type',
       })
 
-      self.indexD.update({  
+      self.indexD.update({
         'type'      : '00',
       })
 
       self.assign()
-
-
 
 
 class GsiDmNode(GsiDmBase):
@@ -141,18 +142,18 @@ class GsiDmNode(GsiDmBase):
 
     self.d.update({
       'type'      : '',
-      'node_id'   : '',      
+      'node_id'   : '',
       'cpu'       : '',
-      'thread'    : '', 
-      'flags'     : '',  
-      'patentry'  : 'false',    
-      'patexit'   : 'false',    
-      'pattern'   : '',    
-      'bpentry'   : 'false',    
-      'bpexit'    : 'false',  
+      'thread'    : '',
+      'flags'     : '',
+      'patentry'  : 'false',
+      'patexit'   : 'false',
+      'pattern'   : '',
+      'bpentry'   : 'false',
+      'bpexit'    : 'false',
       'beamproc'  : '',
     })
-          
+
     self.prettyTypeDict.update({
       'tmsg'       :  'Timing Message',
       'noop'       :  'Noop Command',
@@ -206,7 +207,7 @@ class GsiDmNode(GsiDmBase):
       'twait'     : 'Wait Time',
     })
 
-    self.indexD.update({  
+    self.indexD.update({
       'type'      : '00',
       'node_id'   : '01',
       'cpu'       : '02',
@@ -245,8 +246,6 @@ class GsiDmNode(GsiDmBase):
     })
 
 
-
-
 class GsiDmBlock(GsiDmNode):
   def __init__(self, attrs):
     super(GsiDmBlock, self).__init__(attrs)
@@ -268,10 +267,7 @@ class GsiDmBlock(GsiDmNode):
 class GsiDmEvent(GsiDmNode):
   def __init__(self, attrs):
     super(GsiDmEvent, self).__init__(attrs)
-
     self.d['toffs'] = ''
-
-
     self.assign()
     self.convertTime()
 
@@ -300,7 +296,6 @@ class GsiDmTmsg(GsiDmEvent):
     })
 
     self.assign()
-    self.convertTime()
 
 
 class GsiDmCmd(GsiDmEvent):
@@ -313,9 +308,6 @@ class GsiDmCmd(GsiDmEvent):
       'prio'   : '',
       'qty'    : '',
     })
-
-
-
 
     self.assign()
     self.convertTime()
@@ -331,12 +323,13 @@ class GsiDmNop(GsiDmCmd):
     self.convertTime()
 
 
-
-
 class GsiDmFlow(GsiDmCmd):
   def __init__(self, attrs):
     super(GsiDmFlow, self).__init__(attrs)
-    self.d['permanent']  = 'false'
+
+    self.d.update({
+      'permanent' : 'false',
+    })
 
     self.assign()
     self.convertTime()
@@ -348,22 +341,19 @@ class GsiDmFlush(GsiDmCmd):
     self.convertTime()
 
 
-  
-
-class GsiDmWait(GsiDmCmd):  
+class GsiDmWait(GsiDmCmd):
   def __init__(self, attrs):
     super(GsiDmWait, self).__init__(attrs)
-    self.d['twait']      = ''
-
+    self.d['twait'] = '',
     self.assign()
     self.convertTime()
 
   def convertTime(self):
-    super(GsiDmCmd, self).convertTime()
-    self.d['twait'] =  self.nsTime2scientific(self.d['twait'])  
+    super(GsiDmWait, self).convertTime()
+    self.d['twait'] =  self.nsTime2scientific(self.d['twait'])
+
 
 class GsiDmMeta(GsiDmNode):
   def __init__(self, attrs):
     super(GsiDmMeta, self).__init__(attrs)
     self.assign()
-
